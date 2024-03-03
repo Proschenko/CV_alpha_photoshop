@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Загрузка изображения
-image_path = 'data/pngwing.com.png'
+image_path = 'data/porsche.png'
 image = cv2.imread(image_path)
 
 # region Показать изображение на экране
