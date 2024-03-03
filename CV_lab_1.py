@@ -4,8 +4,9 @@ from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication
 from PyQt5 import QtCore, QtWidgets
+from PIL import Image
 
-
+from PreprocessingIMG import Preprocessing_IMG
 
 
 class Ui_MainWindow(object):
@@ -224,7 +225,7 @@ class Ui_MainWindow(object):
         self.view_main_window = QLabel(self.centralwidget)
         self.view_main_window.setGeometry(QtCore.QRect(256, 30, 661, 561))
         self.view_main_window.setObjectName("view_main_window")
-        self.view_main_window.setScaledContents(True)
+
         self.view_main_window.setMouseTracking(True)  # Включаем отслеживание движения мыши
         self.view_main_window.setStyleSheet("border: 1px solid black;")  # Добавляем рамку
 
@@ -239,8 +240,6 @@ class Ui_MainWindow(object):
 
         #region fields
         self.image_path = None
-        self.image=None
-        self.cursor_position = None
         self.original_pixmap = None  # Сохраняем оригинальное изображение
         #endregion
 
@@ -249,10 +248,10 @@ class Ui_MainWindow(object):
 
 
         #region grey
-        self.button_grey_img_R.clicked.connect(self.button_grey_img_R_clicked)
-        self.button_grey_img_G.clicked.connect(self.button_grey_img_G_clicked)
-        self.button_grey_img_B.clicked.connect(self.button_grey_img_B_clicked)
-        self.button_grey_img_RGB_mean.clicked.connect(self.button_grey_img_RGB_mean_clicked)
+        self.button_grey_img_R.clicked.connect(lambda: self.button_grey_img_clicked('red'))
+        self.button_grey_img_G.clicked.connect(lambda: self.button_grey_img_clicked('green'))
+        self.button_grey_img_B.clicked.connect(lambda: self.button_grey_img_clicked('blue'))
+        self.button_grey_img_RGB_mean.clicked.connect(lambda: self.button_grey_img_clicked('rgb_mean'))
 
         #endregion
 
@@ -285,10 +284,23 @@ class Ui_MainWindow(object):
         # Диалоговое окно выбора файла для загрузки изображения
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Выбрать изображение", "",
                                                             "Images (*.png *.tiff *.bmp)")
+
         if filename:  # Если пользователь выбрал файл
-            pixmap = QPixmap(filename)
-            self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
-            self.view_main_window.setPixmap(pixmap)  # Отображаем изображение на основном QLabel
+            # Вызываем метод из модуля Preprocessing_IMG для изменения размера и сохранения изображения
+            resized_image_path = Preprocessing_IMG.resize_and_save_image(filename)
+            self.image_path = resized_image_path
+
+            if resized_image_path:
+                # Загружаем изображение на QLabel из папки Temp
+                pixmap = QPixmap(resized_image_path)
+                self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
+                self.view_main_window.setPixmap(pixmap)  # Отображаем изображение на основном QLabel
+
+
+    def update_img(self):
+        pixmap = QPixmap(self.image_path)
+        self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
+        self.view_main_window.setPixmap(pixmap)  # Отображаем изображение на основном QLabel
 
     def mouseMoveEvent(self, event):
         # Получаем текущие координаты курсора
@@ -356,8 +368,8 @@ class Ui_MainWindow(object):
 
                 # Отображаем значения в text_output_console
                 self.text_output_console.setText(
-                    f"Координаты пикселя: ({cursor_position.x()}, {cursor_position.y()})\n"
-                    f"Значения RGB: {average_rgb}\n"
+                    f"Координаты: ({cursor_position.x()}, {cursor_position.y()})\n"
+                    f"RGB: {average_rgb}\n"
                     f"Интенсивность: {intensity}\n"
                     f"𝜇𝑊𝑝: {np.mean(intensity)}\n"
                     f"𝑠𝑊𝑝: {std_deviation}"
@@ -425,22 +437,44 @@ class Ui_MainWindow(object):
 
     # region grey
 
-    def button_grey_img_R_clicked(self):
-        pass
+    def button_grey_img_clicked(self, channel):
 
-    def button_grey_img_G_clicked(self):
-        pass
 
-    def button_grey_img_B_clicked(self):
-        pass
-    def button_grey_img_RGB_mean_clicked(self):
-        pass
+        input_path = self.image_path
+        output_path= self.image_path
 
+        if channel == 'rgb_mean':
+            grayscale_img = self.grayscale_average(input_path)
+            grayscale_img.save(output_path)
+        else:
+            channel_img = self.extract_channel(input_path, channel)
+            channel_img.save(output_path)
+
+        self.update_img()
+        print("Изображение успешно сохранено:", output_path)
+
+    def extract_channel(self, image_path, channel='red'):
+        img = Image.open(image_path)
+        img = img.convert('RGBA')  # Используем RGBA для поддержки прозрачности
+        if channel == 'red':
+            r, _, _, _ = img.split()
+            return r
+        elif channel == 'green':
+            _, g, _, _ = img.split()
+            return g
+        elif channel == 'blue':
+            _, _, b, _ = img.split()
+            return b
+        else:
+            print("Invalid channel name")
+            return None
+
+    def grayscale_average(self, image_path):
+        img = Image.open(image_path)
+        img = img.convert('RGBA')  # Используем RGBA для поддержки прозрачности
+        grayscale_img = img.convert('L')  # Конвертируем в оттенки серого
+        return grayscale_img
     # endregion
-
-
-
-    #endregion
 
     #region negative
 
