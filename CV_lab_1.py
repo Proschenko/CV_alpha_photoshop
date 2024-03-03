@@ -11,20 +11,23 @@ from PreprocessingIMG import Preprocessing_IMG
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        #region base_pyqt
+        #region base
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1200, 833)
+        MainWindow.resize(1264, 833)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(20, 20, 221, 121))
         self.groupBox.setObjectName("groupBox")
         self.button_download_img = QtWidgets.QPushButton(self.groupBox)
-        self.button_download_img.setGeometry(QtCore.QRect(10, 40, 201, 28))
+        self.button_download_img.setGeometry(QtCore.QRect(10, 40, 161, 28))
         self.button_download_img.setObjectName("button_download_img")
         self.button_save_img = QtWidgets.QPushButton(self.groupBox)
         self.button_save_img.setGeometry(QtCore.QRect(10, 80, 201, 28))
         self.button_save_img.setObjectName("button_save_img")
+        self.pushButton = QtWidgets.QPushButton(self.groupBox)
+        self.pushButton.setGeometry(QtCore.QRect(180, 40, 31, 28))
+        self.pushButton.setObjectName("pushButton")
 
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_2.setGeometry(QtCore.QRect(20, 150, 221, 201))
@@ -107,7 +110,7 @@ class Ui_MainWindow(object):
         self.button_flip_horizontal.setGeometry(QtCore.QRect(20, 70, 171, 28))
         self.button_flip_horizontal.setObjectName("button_flip_horizontal")
         self.text_output_console = QtWidgets.QTextEdit(self.centralwidget)
-        self.text_output_console.setGeometry(QtCore.QRect(930, 220, 231, 91))
+        self.text_output_console.setGeometry(QtCore.QRect(940, 220, 291, 91))
         self.text_output_console.setObjectName("text_output_console")
         self.groupBox_6 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_6.setGeometry(QtCore.QRect(260, 600, 211, 201))
@@ -151,7 +154,7 @@ class Ui_MainWindow(object):
         self.radio_model_8.setGeometry(QtCore.QRect(20, 110, 151, 31))
         self.radio_model_8.setObjectName("radio_model_8")
         self.groupBox_10 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_10.setGeometry(QtCore.QRect(930, 320, 231, 481))
+        self.groupBox_10.setGeometry(QtCore.QRect(970, 320, 231, 481))
         self.groupBox_10.setObjectName("groupBox_10")
         self.button_graph_show = QtWidgets.QPushButton(self.groupBox_10)
         self.button_graph_show.setGeometry(QtCore.QRect(20, 440, 191, 28))
@@ -231,7 +234,7 @@ class Ui_MainWindow(object):
 
         # Заменяем QGraphicsView на QLabel для отображения увеличенной версии пикселя
         self.view_small_square = QLabel(self.centralwidget)
-        self.view_small_square.setGeometry(QtCore.QRect(960, 30, 170, 170))
+        self.view_small_square.setGeometry(QtCore.QRect(990, 30, 170, 170))
         self.view_small_square.setScaledContents(True)
         self.view_small_square.setObjectName("view_small_square")
         self.view_small_square.setStyleSheet("border: 1px solid black;")  # Добавляем рамку
@@ -239,13 +242,14 @@ class Ui_MainWindow(object):
 
 
         #region fields
-        self.image_path = None
+        self.image_path = None #Рабочее пространство
+        self.original_path = None #Исходник
         self.original_pixmap = None  # Сохраняем оригинальное изображение
         #endregion
 
         #region action
         self.button_download_img.clicked.connect(self.handle_load_image)
-
+        self.pushButton.clicked.connect(self.handle_reload_image)
 
         #region grey
         self.button_grey_img_R.clicked.connect(lambda: self.button_grey_img_clicked('red'))
@@ -279,7 +283,7 @@ class Ui_MainWindow(object):
         self.view_main_window.mouseMoveEvent = self.mouseMoveEvent
 
         #endregion
-
+    #region load
     def handle_load_image(self):
         # Диалоговое окно выбора файла для загрузки изображения
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Выбрать изображение", "",
@@ -287,7 +291,19 @@ class Ui_MainWindow(object):
 
         if filename:  # Если пользователь выбрал файл
             # Вызываем метод из модуля Preprocessing_IMG для изменения размера и сохранения изображения
+            self.original_path = filename
             resized_image_path = Preprocessing_IMG.resize_and_save_image(filename)
+            self.image_path = resized_image_path
+
+            if resized_image_path:
+                # Загружаем изображение на QLabel из папки Temp
+                pixmap = QPixmap(resized_image_path)
+                self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
+                self.view_main_window.setPixmap(pixmap)  # Отображаем изображение на основном QLabel
+
+    def handle_reload_image(self):
+        if  self.original_path is not None:
+            resized_image_path = Preprocessing_IMG.resize_and_save_image(self.original_path)
             self.image_path = resized_image_path
 
             if resized_image_path:
@@ -301,7 +317,9 @@ class Ui_MainWindow(object):
         pixmap = QPixmap(self.image_path)
         self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
         self.view_main_window.setPixmap(pixmap)  # Отображаем изображение на основном QLabel
+    #endregion
 
+    #region IMG shape
     def mouseMoveEvent(self, event):
         # Получаем текущие координаты курсора
         cursor_position = event.pos()
@@ -377,12 +395,15 @@ class Ui_MainWindow(object):
             else:
                 pass
 
+    #endregion
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "DoubleATeam_CV_lab_1"))
         self.groupBox.setTitle(_translate("MainWindow", "Изображение"))
         self.button_download_img.setText(_translate("MainWindow", "Загрузить"))
         self.button_save_img.setText(_translate("MainWindow", "Сохранить"))
+        self.pushButton.setText(_translate("MainWindow", "↻"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Ч/Б фильтр"))
         self.button_grey_img_R.setText(_translate("MainWindow", "Красный канал"))
         self.button_grey_img_G.setText(_translate("MainWindow", "Зеленый канал"))
@@ -398,13 +419,14 @@ class Ui_MainWindow(object):
         self.groupBox_5.setTitle(_translate("MainWindow", "Отражение"))
         self.button_flip_vertical.setText(_translate("MainWindow", "По вертикали"))
         self.button_flip_horizontal.setText(_translate("MainWindow", "По горизонтали"))
-        self.text_output_console.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Координаты:</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">RGB значения:<br />Интенсивность:<br />Мат отклонение:</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Среднее:</p></body></html>"))
+        self.text_output_console.setHtml(_translate("MainWindow",
+                                                    "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                                    "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+                                                    "p, li { white-space: pre-wrap; }\n"
+                                                    "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
+                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Координаты:</p>\n"
+                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">RGB значения:<br />Интенсивность:<br />Мат отклонение:</p>\n"
+                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Среднее:</p></body></html>"))
         self.groupBox_6.setTitle(_translate("MainWindow", "Негатив"))
         self.button_negative_R.setText(_translate("MainWindow", "Красный канал"))
         self.button_negative_G.setText(_translate("MainWindow", "Зеленый канал"))
@@ -438,8 +460,6 @@ class Ui_MainWindow(object):
     # region grey
 
     def button_grey_img_clicked(self, channel):
-
-
         input_path = self.image_path
         output_path= self.image_path
 

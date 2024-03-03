@@ -18,8 +18,8 @@ class Preprocessing_IMG:
             # Сохраняем изображение
             img_resized.save(output_path)
 
-            print("Изображение успешно сохранено:", output_path)
+            print("Изображение успешно сохранено: (preprocessing)", output_path)
             return output_path
         except Exception as e:
-            print("Произошла ошибка:", str(e))
+            print("Произошла ошибка (preprocessing):", str(e))
             return None
