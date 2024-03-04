@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication, QMessageBox
 from PyQt5 import QtCore, QtWidgets
 from PIL import Image
 
@@ -251,7 +251,7 @@ class Ui_MainWindow(object):
         self.button_download_img.clicked.connect(self.handle_load_image)
         self.pushButton.clicked.connect(self.handle_reload_image)
 
-        #region grey
+        #region grey DONE
         self.button_grey_img_R.clicked.connect(lambda: self.button_grey_img_clicked('red'))
         self.button_grey_img_G.clicked.connect(lambda: self.button_grey_img_clicked('green'))
         self.button_grey_img_B.clicked.connect(lambda: self.button_grey_img_clicked('blue'))
@@ -266,23 +266,20 @@ class Ui_MainWindow(object):
         self.button_negative_all.clicked.connect(self.button_negative_all_clicked)
         # endregion
 
-        # region swap chanel
+        # region swap chanel DONE
         self.button_swap_R_B.clicked.connect(self.button_swap_R_B_clicked)
         self.button_swap_R_G.clicked.connect(self.button_swap_R_G_clicked)
         self.button_swap_B_G.clicked.connect(self.button_swap_B_G_clicked)
         # endregion
 
-        #region IMG flip
+        #region IMG flip DONE
         self.button_flip_vertical.clicked.connect(self.button_flip_vertical_clicked)
         self.button_flip_horizontal.clicked.connect(self.button_flip_horizontal_clicked)
         #endregion
 
-
-
         # Подключаем обработчик события мыши для отслеживания движения
         self.view_main_window.mouseMoveEvent = self.mouseMoveEvent
 
-        #endregion
     #region load
     def handle_load_image(self):
         # Диалоговое окно выбора файла для загрузки изображения
@@ -457,21 +454,23 @@ class Ui_MainWindow(object):
         self.action.setText(_translate("MainWindow", "Загрузить"))
         self.action_2.setText(_translate("MainWindow", "Сохранить"))
 
-    # region grey
+    # region grey DONE
 
     def button_grey_img_clicked(self, channel):
-        input_path = self.image_path
-        output_path= self.image_path
+        if self.image_path is not None:
 
-        if channel == 'rgb_mean':
-            grayscale_img = self.grayscale_average(input_path)
-            grayscale_img.save(output_path)
-        else:
-            channel_img = self.extract_channel(input_path, channel)
-            channel_img.save(output_path)
+            input_path = self.image_path
+            output_path= self.image_path
 
-        self.update_img()
-        print("Изображение успешно сохранено:", output_path)
+            if channel == 'rgb_mean':
+                grayscale_img = self.grayscale_average(input_path)
+                grayscale_img.save(output_path)
+            else:
+                channel_img = self.extract_channel(input_path, channel)
+                channel_img.save(output_path)
+
+            self.update_img()
+            print("Изображение успешно сохранено:", output_path)
 
     def extract_channel(self, image_path, channel='red'):
         img = Image.open(image_path)
@@ -496,44 +495,210 @@ class Ui_MainWindow(object):
         return grayscale_img
     # endregion
 
-    #region negative
+    #region negative 50/50 BUG AFTER SWAP ERROR
 
     def button_negative_R_clicked(self):
-        pass
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+            self.show_error_message("Невозможно выполнить операцию",
+                                    "Черно-белое изображение не может быть обработано.")
+            return
+
+        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+            r, g, b, a = img.split()
+        else:  # Если изображение имеет только RGB каналы
+            r, g, b = img.split()
+            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+
+        r_negative = Image.eval(r, lambda x: 255 - x)
+        if a:  # Если альфа-канал существует
+            img_negative = Image.merge(img.mode, (r_negative, g, b, a))
+        else:  # Если альфа-канал отсутствует
+            img_negative = Image.merge(img.mode, (r_negative,))
+        img_negative.save(output_path)
+
+        self.update_img()
 
     def button_negative_G_clicked(self):
-        pass
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+            self.show_error_message("Невозможно выполнить операцию",
+                                    "Черно-белое изображение не может быть обработано.")
+            return
+
+        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+            r, g, b, a = img.split()
+        else:  # Если изображение имеет только RGB каналы
+            r, g, b = img.split()
+            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+
+        g_negative = Image.eval(g, lambda x: 255 - x)
+        if a:  # Если альфа-канал существует
+            img_negative = Image.merge(img.mode, (r, g_negative, b, a))
+        else:  # Если альфа-канал отсутствует
+            img_negative = Image.merge(img.mode, (r, g_negative, b))
+        img_negative.save(output_path)
+
+        self.update_img()
+
     def button_negative_B_clicked(self):
-        pass
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+            self.show_error_message("Невозможно выполнить операцию",
+                                    "Черно-белое изображение не может быть обработано.")
+            return
+
+        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+            r, g, b, a = img.split()
+        else:  # Если изображение имеет только RGB каналы
+            r, g, b = img.split()
+            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+
+        b_negative = Image.eval(b, lambda x: 255 - x)
+        if a:  # Если альфа-канал существует
+            img_negative = Image.merge(img.mode, (r, g, b_negative, a))
+        else:  # Если альфа-канал отсутствует
+            img_negative = Image.merge(img.mode, (r, g, b_negative))
+        img_negative.save(output_path)
+
+        self.update_img()
 
     def button_negative_all_clicked(self):
-        pass
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+            self.show_error_message("Невозможно выполнить операцию",
+                                    "Черно-белое изображение не может быть обработано.")
+            return
+
+        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+            r, g, b, a = img.split()
+        else:  # Если изображение имеет только RGB каналы
+            r, g, b = img.split()
+            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+
+        r_negative = Image.eval(r, lambda x: 255 - x)
+        g_negative = Image.eval(g, lambda x: 255 - x)
+        b_negative = Image.eval(b, lambda x: 255 - x)
+        if a:  # Если альфа-канал существует
+            img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative, a))
+        else:  # Если альфа-канал отсутствует
+            img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative))
+        img_negative.save(output_path)
+
+        self.update_img()
 
     #endregion
 
-    #region IMG FLIP
+    #region IMG FLIP DONE
     def button_flip_vertical_clicked(self):
-        pass
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+            img_flipped = img.transpose(Image.FLIP_TOP_BOTTOM)
+            img_flipped.save(output_path)
+            self.update_img()
+
 
     def button_flip_horizontal_clicked(self):
-        pass
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+            img_flipped = img.transpose(Image.FLIP_LEFT_RIGHT)
+            img_flipped.save(output_path)
+            self.update_img()
+
 
     #endregion
 
-    #region SWAP CHANEL RGB
+    #region SWAP CHANEL RGB DONE
 
     def button_swap_R_G_clicked(self):
-        pass
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию", "Черно-белое изображение не может быть обработано.")
+                return
+
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+            img_swapped = Image.merge("RGB", (g, r, b))
+            img_swapped.save(output_path)
+
+            self.update_img()
 
     def button_swap_R_B_clicked(self):
-        pass
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию", "Черно-белое изображение не может быть обработано.")
+                return
+
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+            img_swapped = Image.merge("RGB", (b, g, r))
+            img_swapped.save(output_path)
+
+            self.update_img()
 
     def button_swap_B_G_clicked(self):
-        pass
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию", "Черно-белое изображение не может быть обработано.")
+                return
+
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+            img_swapped = Image.merge("RGB", (r, b, g))
+            img_swapped.save(output_path)
+
+            self.update_img()
 
     #endregion
 
 
+    def show_error_message(self, title, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.exec_()
 
 if __name__ == "__main__":
     import sys
