@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication, QMessageBox
 from PyQt5 import QtCore, QtWidgets
-from PIL import Image
+from PIL import Image, ImageFilter, ImageEnhance
 
 from PreprocessingIMG import Preprocessing_IMG
 
@@ -49,24 +49,28 @@ class Ui_MainWindow(object):
         self.groupBox_3.setObjectName("groupBox_3")
         self.slider_intensive_B = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_B.setGeometry(QtCore.QRect(40, 180, 161, 22))
+        self.slider_intensive_B.setMinimum(1)
         self.slider_intensive_B.setMaximum(100)
         self.slider_intensive_B.setProperty("value", 50)
         self.slider_intensive_B.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_B.setObjectName("slider_intensive_B")
         self.slider_intensive_G = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_G.setGeometry(QtCore.QRect(40, 150, 161, 22))
+        self.slider_intensive_G.setMinimum(1)
         self.slider_intensive_G.setMaximum(100)
         self.slider_intensive_G.setProperty("value", 50)
         self.slider_intensive_G.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_G.setObjectName("slider_intensive_G")
         self.slider_intensive_R = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_R.setGeometry(QtCore.QRect(40, 120, 161, 21))
+        self.slider_intensive_R.setMinimum(1)
         self.slider_intensive_R.setMaximum(100)
         self.slider_intensive_R.setProperty("value", 50)
         self.slider_intensive_R.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_R.setObjectName("slider_intensive_R")
         self.slider_intensive_all = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_all.setGeometry(QtCore.QRect(10, 61, 191, 20))
+        self.slider_intensive_all.setMinimum(1)
         self.slider_intensive_all.setMaximum(100)
         self.slider_intensive_all.setProperty("value", 50)
         self.slider_intensive_all.setOrientation(QtCore.Qt.Horizontal)
@@ -88,12 +92,14 @@ class Ui_MainWindow(object):
         self.label_5 = QtWidgets.QLabel(self.groupBox_3)
         self.label_5.setGeometry(QtCore.QRect(20, 180, 101, 21))
         self.label_5.setObjectName("label_5")
+
         self.groupBox_4 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_4.setGeometry(QtCore.QRect(20, 730, 221, 71))
         self.groupBox_4.setObjectName("groupBox_4")
         self.slider_contrast = QtWidgets.QSlider(self.groupBox_4)
         self.slider_contrast.setGeometry(QtCore.QRect(10, 30, 201, 22))
         self.slider_contrast.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.slider_contrast.setMinimum(1)
         self.slider_contrast.setMaximum(100)
         self.slider_contrast.setProperty("value", 50)
         self.slider_contrast.setOrientation(QtCore.Qt.Horizontal)
@@ -153,6 +159,9 @@ class Ui_MainWindow(object):
         self.radio_model_8 = QtWidgets.QRadioButton(self.groupBox_8)
         self.radio_model_8.setGeometry(QtCore.QRect(20, 110, 151, 31))
         self.radio_model_8.setObjectName("radio_model_8")
+        self.button_blur_accept = QtWidgets.QPushButton(self.groupBox_8)
+        self.button_blur_accept.setGeometry(QtCore.QRect(40, 150, 111, 28))
+        self.button_blur_accept.setObjectName("button_blur_accept")
         self.groupBox_10 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_10.setGeometry(QtCore.QRect(970, 320, 231, 481))
         self.groupBox_10.setObjectName("groupBox_10")
@@ -199,6 +208,8 @@ class Ui_MainWindow(object):
         self.spin_box_profile_intensive_num_str.setGeometry(QtCore.QRect(20, 30, 171, 22))
         self.spin_box_profile_intensive_num_str.setAlignment(QtCore.Qt.AlignCenter)
         self.spin_box_profile_intensive_num_str.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.spin_box_profile_intensive_num_str.setMinimum(1)
+        self.spin_box_profile_intensive_num_str.setMaximum(561)
         self.spin_box_profile_intensive_num_str.setObjectName("spin_box_profile_intensive_num_str")
         self.check_box_profile_colomn = QtWidgets.QCheckBox(self.groupBox_10)
         self.check_box_profile_colomn.setGeometry(QtCore.QRect(10, 341, 191, 20))
@@ -210,7 +221,12 @@ class Ui_MainWindow(object):
         self.spin_box_profile_intensive_num_colomn.setGeometry(QtCore.QRect(20, 30, 171, 22))
         self.spin_box_profile_intensive_num_colomn.setAlignment(QtCore.Qt.AlignCenter)
         self.spin_box_profile_intensive_num_colomn.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.spin_box_profile_intensive_num_colomn.setMinimum(1)
+        self.spin_box_profile_intensive_num_colomn.setMaximum(661)
         self.spin_box_profile_intensive_num_colomn.setObjectName("spin_box_profile_intensive_num_colomn")
+        self.tool_button_type_shape = QtWidgets.QToolButton(self.centralwidget)
+        self.tool_button_type_shape.setGeometry(QtCore.QRect(1180, 30, 50, 50))
+        self.tool_button_type_shape.setObjectName("tool_button_type_shape")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -245,6 +261,9 @@ class Ui_MainWindow(object):
         self.image_path = None #Рабочее пространство
         self.original_path = None #Исходник
         self.original_pixmap = None  # Сохраняем оригинальное изображение
+
+        self.color_pen_shape = None
+        self.size_shape = None
         #endregion
 
         #region action
@@ -277,10 +296,27 @@ class Ui_MainWindow(object):
         self.button_flip_horizontal.clicked.connect(self.button_flip_horizontal_clicked)
         #endregion
 
+        #region blur
+        self.button_blur_accept.clicked.connect(self.button_blur_accept_clicked)
+        #endregion
+
+        #region contrast
+        self.slider_contrast.valueChanged.connect(self.slider_contrast_changed)
+        #endregion
+
         # Подключаем обработчик события мыши для отслеживания движения
         self.view_main_window.mouseMoveEvent = self.mouseMoveEvent
 
     #region load
+
+    def set_default_value_slider(self):
+        self.slider_contrast.setProperty("value", 50)
+        self.slider_intensive_B.setProperty("value",50)
+        self.slider_intensive_R.setProperty("value",50)
+        self.slider_intensive_G.setProperty("value",50)
+        self.slider_intensive_all.setProperty("value",50)
+
+
     def handle_load_image(self):
         # Диалоговое окно выбора файла для загрузки изображения
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Выбрать изображение", "",
@@ -293,6 +329,7 @@ class Ui_MainWindow(object):
             self.image_path = resized_image_path
 
             if resized_image_path:
+                self.set_default_value_slider()
                 # Загружаем изображение на QLabel из папки Temp
                 pixmap = QPixmap(resized_image_path)
                 self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
@@ -304,6 +341,7 @@ class Ui_MainWindow(object):
             self.image_path = resized_image_path
 
             if resized_image_path:
+                self.set_default_value_slider()
                 # Загружаем изображение на QLabel из папки Temp
                 pixmap = QPixmap(resized_image_path)
                 self.original_pixmap = pixmap.copy()  # Сохраняем оригинальное изображение
@@ -416,15 +454,6 @@ class Ui_MainWindow(object):
         self.groupBox_5.setTitle(_translate("MainWindow", "Отражение"))
         self.button_flip_vertical.setText(_translate("MainWindow", "По вертикали"))
         self.button_flip_horizontal.setText(_translate("MainWindow", "По горизонтали"))
-        self.text_output_console.setHtml(_translate("MainWindow",
-                                                    "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                                    "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-                                                    "p, li { white-space: pre-wrap; }\n"
-                                                    "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
-                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Координаты:</p>\n"
-                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">RGB значения:<br />Интенсивность:<br />Мат отклонение:</p>\n"
-                                                    "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Среднее:</p></body></html>"))
-        self.groupBox_6.setTitle(_translate("MainWindow", "Негатив"))
         self.button_negative_R.setText(_translate("MainWindow", "Красный канал"))
         self.button_negative_G.setText(_translate("MainWindow", "Зеленый канал"))
         self.button_negative_B.setText(_translate("MainWindow", "Синий канал"))
@@ -437,6 +466,7 @@ class Ui_MainWindow(object):
         self.radio_mean_value.setText(_translate("MainWindow", "Средним значением"))
         self.radio_model_4.setText(_translate("MainWindow", "Модель 4-связности"))
         self.radio_model_8.setText(_translate("MainWindow", "Модель 8-связности"))
+        self.button_blur_accept.setText(_translate("MainWindow", "Применить"))
         self.groupBox_10.setTitle(_translate("MainWindow", "Графики"))
         self.button_graph_show.setText(_translate("MainWindow", "Показать"))
         self.check_box_hist_intensive.setText(_translate("MainWindow", "Гистограмма яркости"))
@@ -451,6 +481,7 @@ class Ui_MainWindow(object):
         self.groupBox_11.setTitle(_translate("MainWindow", "Выберите строку"))
         self.check_box_profile_colomn.setText(_translate("MainWindow", "Профиль яркости (столбец)"))
         self.groupBox_12.setTitle(_translate("MainWindow", "Выберите Столбец"))
+        self.tool_button_type_shape.setText(_translate("MainWindow", "..."))
         self.action.setText(_translate("MainWindow", "Загрузить"))
         self.action_2.setText(_translate("MainWindow", "Сохранить"))
 
@@ -692,6 +723,57 @@ class Ui_MainWindow(object):
 
     #endregion
 
+    #region blur
+    def button_blur_accept_clicked(self):
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+
+        # Получаем выбранный тип размытия
+        blur_type = ""
+        if self.radio_mean_value.isChecked():
+            blur_type = "mean"
+        elif self.radio_model_4.isChecked():
+            blur_type = "model_4"
+        elif self.radio_model_8.isChecked():
+            blur_type = "model_8"
+
+        # Применяем соответствующий фильтр размытия
+        if blur_type == "mean":
+            img_blurred = img.filter(ImageFilter.BLUR)
+        elif blur_type == "model_4":
+            img_blurred = img.filter(ImageFilter.GaussianBlur(radius=1))
+        elif blur_type == "model_8":
+            img_blurred = img.filter(ImageFilter.GaussianBlur(radius=2))
+        else:
+            self.show_error_message("Ошибка", "Выберите тип размытия")
+            return
+
+        img_blurred.save(output_path)
+        self.update_img()
+
+    #endregion
+
+    #region contrast
+    def slider_contrast_changed(self, value):
+        input_path = self.image_path
+        output_path = self.image_path
+
+        img = Image.open(input_path)
+
+        # Подготавливаем значение для контраста, используя логарифмическую функцию
+        contrast_value = value / 50.0  # нормализуем значение ползунка
+        contrast_value = 2 ** (
+                    contrast_value - 1)  # применяем логарифмическую функцию для более тонкого управления контрастностью
+
+        # Увеличиваем контрастность изображения и сохраняем результат
+        enhancer = ImageEnhance.Contrast(img)
+        img_contrasted = enhancer.enhance(contrast_value)
+        img_contrasted.save(output_path)
+
+        self.update_img()
+    #endregion
 
     def show_error_message(self, title, message):
         msg = QMessageBox()
