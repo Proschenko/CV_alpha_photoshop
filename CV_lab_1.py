@@ -51,6 +51,7 @@ class Ui_MainWindow(object):
         self.slider_intensive_B.setGeometry(QtCore.QRect(40, 180, 161, 22))
         self.slider_intensive_B.setMinimum(1)
         self.slider_intensive_B.setMaximum(100)
+        self.slider_intensive_B.setSingleStep(5)
         self.slider_intensive_B.setProperty("value", 50)
         self.slider_intensive_B.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_B.setObjectName("slider_intensive_B")
@@ -58,16 +59,20 @@ class Ui_MainWindow(object):
         self.slider_intensive_G.setGeometry(QtCore.QRect(40, 150, 161, 22))
         self.slider_intensive_G.setMinimum(1)
         self.slider_intensive_G.setMaximum(100)
+        self.slider_intensive_G.setSingleStep(5)
         self.slider_intensive_G.setProperty("value", 50)
         self.slider_intensive_G.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_G.setObjectName("slider_intensive_G")
+
         self.slider_intensive_R = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_R.setGeometry(QtCore.QRect(40, 120, 161, 21))
         self.slider_intensive_R.setMinimum(1)
         self.slider_intensive_R.setMaximum(100)
+        self.slider_intensive_R.setSingleStep(5)
         self.slider_intensive_R.setProperty("value", 50)
         self.slider_intensive_R.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_R.setObjectName("slider_intensive_R")
+
         self.slider_intensive_all = QtWidgets.QSlider(self.groupBox_3)
         self.slider_intensive_all.setGeometry(QtCore.QRect(10, 61, 191, 20))
         self.slider_intensive_all.setMinimum(1)
@@ -75,6 +80,8 @@ class Ui_MainWindow(object):
         self.slider_intensive_all.setProperty("value", 50)
         self.slider_intensive_all.setOrientation(QtCore.Qt.Horizontal)
         self.slider_intensive_all.setObjectName("slider_intensive_all")
+        self.slider_intensive_all.setSingleStep(5)
+
         self.label = QtWidgets.QLabel(self.groupBox_3)
         self.label.setGeometry(QtCore.QRect(50, 30, 111, 21))
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -84,13 +91,13 @@ class Ui_MainWindow(object):
         self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
         self.label_3 = QtWidgets.QLabel(self.groupBox_3)
-        self.label_3.setGeometry(QtCore.QRect(20, 120, 101, 21))
+        self.label_3.setGeometry(QtCore.QRect(20, 120, 16, 21))
         self.label_3.setObjectName("label_3")
         self.label_4 = QtWidgets.QLabel(self.groupBox_3)
-        self.label_4.setGeometry(QtCore.QRect(20, 150, 101, 21))
+        self.label_4.setGeometry(QtCore.QRect(20, 150, 16, 21))
         self.label_4.setObjectName("label_4")
         self.label_5 = QtWidgets.QLabel(self.groupBox_3)
-        self.label_5.setGeometry(QtCore.QRect(20, 180, 101, 21))
+        self.label_5.setGeometry(QtCore.QRect(20, 180, 16, 21))
         self.label_5.setObjectName("label_5")
 
         self.groupBox_4 = QtWidgets.QGroupBox(self.centralwidget)
@@ -302,6 +309,13 @@ class Ui_MainWindow(object):
 
         #region contrast
         self.slider_contrast.valueChanged.connect(self.slider_contrast_changed)
+        #endregion
+
+        #region intensive
+        self.slider_intensive_R.sliderReleased.connect(self.slider_intensive_changed)
+        self.slider_intensive_G.sliderReleased.connect(self.slider_intensive_changed)
+        self.slider_intensive_B.sliderReleased.connect(self.slider_intensive_changed)
+        self.slider_intensive_all.sliderReleased.connect(self.slider_intensive_changed)
         #endregion
 
         # Подключаем обработчик события мыши для отслеживания движения
@@ -529,106 +543,114 @@ class Ui_MainWindow(object):
     #region negative 50/50 BUG AFTER SWAP ERROR
 
     def button_negative_R_clicked(self):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
-        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
-            self.show_error_message("Невозможно выполнить операцию",
-                                    "Черно-белое изображение не может быть обработано.")
-            return
+            input_path = self.image_path
+            output_path = self.image_path
 
-        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
-            r, g, b, a = img.split()
-        else:  # Если изображение имеет только RGB каналы
-            r, g, b = img.split()
-            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию",
+                                        "Черно-белое изображение не может быть обработано.")
+                return
 
-        r_negative = Image.eval(r, lambda x: 255 - x)
-        if a:  # Если альфа-канал существует
-            img_negative = Image.merge(img.mode, (r_negative, g, b, a))
-        else:  # Если альфа-канал отсутствует
-            img_negative = Image.merge(img.mode, (r_negative,))
-        img_negative.save(output_path)
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+                a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
 
-        self.update_img()
+            r_negative = Image.eval(r, lambda x: 255 - x)
+            if a:  # Если альфа-канал существует
+                img_negative = Image.merge(img.mode, (r_negative, g, b, a))
+            else:  # Если альфа-канал отсутствует
+                img_negative = Image.merge(img.mode, (r_negative,))
+            img_negative.save(output_path)
+
+            self.update_img()
 
     def button_negative_G_clicked(self):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
-        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
-            self.show_error_message("Невозможно выполнить операцию",
-                                    "Черно-белое изображение не может быть обработано.")
-            return
+            input_path = self.image_path
+            output_path = self.image_path
 
-        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
-            r, g, b, a = img.split()
-        else:  # Если изображение имеет только RGB каналы
-            r, g, b = img.split()
-            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию",
+                                        "Черно-белое изображение не может быть обработано.")
+                return
 
-        g_negative = Image.eval(g, lambda x: 255 - x)
-        if a:  # Если альфа-канал существует
-            img_negative = Image.merge(img.mode, (r, g_negative, b, a))
-        else:  # Если альфа-канал отсутствует
-            img_negative = Image.merge(img.mode, (r, g_negative, b))
-        img_negative.save(output_path)
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+                a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
 
-        self.update_img()
+            g_negative = Image.eval(g, lambda x: 255 - x)
+            if a:  # Если альфа-канал существует
+                img_negative = Image.merge(img.mode, (r, g_negative, b, a))
+            else:  # Если альфа-канал отсутствует
+                img_negative = Image.merge(img.mode, (r, g_negative, b))
+            img_negative.save(output_path)
+
+            self.update_img()
 
     def button_negative_B_clicked(self):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
-        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
-            self.show_error_message("Невозможно выполнить операцию",
-                                    "Черно-белое изображение не может быть обработано.")
-            return
+            input_path = self.image_path
+            output_path = self.image_path
 
-        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
-            r, g, b, a = img.split()
-        else:  # Если изображение имеет только RGB каналы
-            r, g, b = img.split()
-            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию",
+                                        "Черно-белое изображение не может быть обработано.")
+                return
 
-        b_negative = Image.eval(b, lambda x: 255 - x)
-        if a:  # Если альфа-канал существует
-            img_negative = Image.merge(img.mode, (r, g, b_negative, a))
-        else:  # Если альфа-канал отсутствует
-            img_negative = Image.merge(img.mode, (r, g, b_negative))
-        img_negative.save(output_path)
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+                a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
 
-        self.update_img()
+            b_negative = Image.eval(b, lambda x: 255 - x)
+            if a:  # Если альфа-канал существует
+                img_negative = Image.merge(img.mode, (r, g, b_negative, a))
+            else:  # Если альфа-канал отсутствует
+                img_negative = Image.merge(img.mode, (r, g, b_negative))
+            img_negative.save(output_path)
+
+            self.update_img()
 
     def button_negative_all_clicked(self):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
-        if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
-            self.show_error_message("Невозможно выполнить операцию",
-                                    "Черно-белое изображение не может быть обработано.")
-            return
+            input_path = self.image_path
+            output_path = self.image_path
 
-        if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
-            r, g, b, a = img.split()
-        else:  # Если изображение имеет только RGB каналы
-            r, g, b = img.split()
-            a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+            img = Image.open(input_path)
+            if img.mode == 'L':  # Проверяем режим изображения (L - оттенки серого)
+                self.show_error_message("Невозможно выполнить операцию",
+                                        "Черно-белое изображение не может быть обработано.")
+                return
 
-        r_negative = Image.eval(r, lambda x: 255 - x)
-        g_negative = Image.eval(g, lambda x: 255 - x)
-        b_negative = Image.eval(b, lambda x: 255 - x)
-        if a:  # Если альфа-канал существует
-            img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative, a))
-        else:  # Если альфа-канал отсутствует
-            img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative))
-        img_negative.save(output_path)
+            if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
+                r, g, b, a = img.split()
+            else:  # Если изображение имеет только RGB каналы
+                r, g, b = img.split()
+                a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
 
-        self.update_img()
+            r_negative = Image.eval(r, lambda x: 255 - x)
+            g_negative = Image.eval(g, lambda x: 255 - x)
+            b_negative = Image.eval(b, lambda x: 255 - x)
+            if a:  # Если альфа-канал существует
+                img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative, a))
+            else:  # Если альфа-канал отсутствует
+                img_negative = Image.merge(img.mode, (r_negative, g_negative, b_negative))
+            img_negative.save(output_path)
+
+            self.update_img()
 
     #endregion
 
@@ -725,54 +747,85 @@ class Ui_MainWindow(object):
 
     #region blur
     def button_blur_accept_clicked(self):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
+            input_path = self.image_path
+            output_path = self.image_path
 
-        # Получаем выбранный тип размытия
-        blur_type = ""
-        if self.radio_mean_value.isChecked():
-            blur_type = "mean"
-        elif self.radio_model_4.isChecked():
-            blur_type = "model_4"
-        elif self.radio_model_8.isChecked():
-            blur_type = "model_8"
+            img = Image.open(input_path)
 
-        # Применяем соответствующий фильтр размытия
-        if blur_type == "mean":
-            img_blurred = img.filter(ImageFilter.BLUR)
-        elif blur_type == "model_4":
-            img_blurred = img.filter(ImageFilter.GaussianBlur(radius=1))
-        elif blur_type == "model_8":
-            img_blurred = img.filter(ImageFilter.GaussianBlur(radius=2))
-        else:
-            self.show_error_message("Ошибка", "Выберите тип размытия")
-            return
+            # Получаем выбранный тип размытия
+            blur_type = ""
+            if self.radio_mean_value.isChecked():
+                blur_type = "mean"
+            elif self.radio_model_4.isChecked():
+                blur_type = "model_4"
+            elif self.radio_model_8.isChecked():
+                blur_type = "model_8"
 
-        img_blurred.save(output_path)
-        self.update_img()
+            # Применяем соответствующий фильтр размытия
+            if blur_type == "mean":
+                img_blurred = img.filter(ImageFilter.BLUR)
+            elif blur_type == "model_4":
+                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=1))
+            elif blur_type == "model_8":
+                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=2))
+            else:
+                self.show_error_message("Ошибка", "Выберите тип размытия")
+                return
+
+            img_blurred.save(output_path)
+            self.update_img()
 
     #endregion
 
     #region contrast
     def slider_contrast_changed(self, value):
-        input_path = self.image_path
-        output_path = self.image_path
+        if self.image_path is not None:
 
-        img = Image.open(input_path)
+            input_path = self.image_path
+            output_path = self.image_path
 
-        # Подготавливаем значение для контраста, используя логарифмическую функцию
-        contrast_value = value / 50.0  # нормализуем значение ползунка
-        contrast_value = 2 ** (
-                    contrast_value - 1)  # применяем логарифмическую функцию для более тонкого управления контрастностью
+            img = Image.open(input_path)
 
-        # Увеличиваем контрастность изображения и сохраняем результат
-        enhancer = ImageEnhance.Contrast(img)
-        img_contrasted = enhancer.enhance(contrast_value)
-        img_contrasted.save(output_path)
+            # Подготавливаем значение для контраста, используя логарифмическую функцию
+            contrast_value = value / 50.0  # нормализуем значение ползунка
+            contrast_value = 2 ** (
+                        contrast_value - 1)  # применяем логарифмическую функцию для более тонкого управления контрастностью
 
-        self.update_img()
+            # Увеличиваем контрастность изображения и сохраняем результат
+            enhancer = ImageEnhance.Contrast(img)
+            img_contrasted = enhancer.enhance(contrast_value)
+            img_contrasted.save(output_path)
+
+            self.update_img()
+    #endregion
+
+    #region intensive
+    def slider_intensive_changed(self):
+        if self.image_path is not None:
+
+            input_path = self.image_path
+            output_path = self.image_path
+
+            img = Image.open(input_path)
+
+            # Получаем значения интенсивности для каждого канала и всего изображения
+            intensity_R = self.slider_intensive_R.value() / 50.0
+            intensity_G = self.slider_intensive_G.value() / 50.0
+            intensity_B = self.slider_intensive_B.value() / 50.0
+            intensity_all = self.slider_intensive_all.value() / 50.0
+
+            # Применяем изменения к каждому каналу и всему изображению
+            img_R = ImageEnhance.Color(img).enhance(intensity_R)
+            img_G = ImageEnhance.Color(img_R).enhance(intensity_G)
+            img_B = ImageEnhance.Color(img_G).enhance(intensity_B)
+            img_all = ImageEnhance.Color(img_B).enhance(intensity_all)
+
+            # Сохраняем измененное изображение
+            img_all.save(output_path)
+
+            self.update_img()
     #endregion
 
     def show_error_message(self, title, message):
