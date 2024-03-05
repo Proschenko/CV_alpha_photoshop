@@ -1,10 +1,13 @@
 import cv2
 import numpy as np
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication, QMessageBox
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor, QIcon
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication, QMessageBox, QMenu, \
+    QToolButton, QAction
 from PyQt5 import QtCore, QtWidgets
 from PIL import Image, ImageFilter, ImageEnhance
+from matplotlib import pyplot as plt
+from GraphView import GraphView
 
 from PreprocessingIMG import Preprocessing_IMG
 
@@ -262,16 +265,20 @@ class Ui_MainWindow(object):
         self.view_small_square.setObjectName("view_small_square")
         self.view_small_square.setStyleSheet("border: 1px solid black;")  # Добавляем рамку
 
-
+        self.feature_color()
 
         #region fields
         self.image_path = None #Рабочее пространство
         self.original_path = None #Исходник
         self.original_pixmap = None  # Сохраняем оригинальное изображение
 
-        self.color_pen_shape = None
+        self.color_pen_shape = Qt.yellow
         self.size_shape = None
+
+
+
         #endregion
+
 
         #region action
         self.button_download_img.clicked.connect(self.handle_load_image)
@@ -318,8 +325,49 @@ class Ui_MainWindow(object):
         self.slider_intensive_all.sliderReleased.connect(self.slider_intensive_changed)
         #endregion
 
+        #region graph hist map
+        self.button_graph_show.clicked.connect(self.button_show_graph_clicked)
+
+        #endregion
         # Подключаем обработчик события мыши для отслеживания движения
         self.view_main_window.mouseMoveEvent = self.mouseMoveEvent
+
+    # region feature
+    def feature_color(self):
+        self.tool_button_type_shape.setPopupMode(QToolButton.MenuButtonPopup)
+        self.tool_button_type_shape.setIcon(QIcon("icons/Желтый.png"))
+
+        menu = QMenu(self.tool_button_type_shape)
+        self.tool_button_type_shape.setMenu(menu)
+
+        self.addIconAction(menu, "Желтый", "icons/Желтый.png", Qt.yellow)
+        self.addIconAction(menu, "Красный", "icons/Красный.png", Qt.red)
+        self.addIconAction(menu, "Зеленый", "icons/Зеленый.png", Qt.green)
+        self.addIconAction(menu, "Черный", "icons/Черный.png", Qt.black)
+        self.addIconAction(menu, "Белый", "icons/Черный.png", Qt.white)
+
+    def addIconAction(self, menu, name, icon_path, color):
+        action = QAction(QIcon(icon_path), name, menu)
+        action.triggered.connect(lambda checked, color=color: self.onActionTriggered(color))
+        menu.addAction(action)
+
+    def onActionTriggered(self, color):
+        self.color_pen_shape = color
+        # Устанавливаем иконку соответствующего цвета на кнопку
+        if color == Qt.yellow:
+            self.tool_button_type_shape.setIcon(QIcon("icons/Желтый.png"))
+        elif color == Qt.red:
+            self.tool_button_type_shape.setIcon(QIcon("icons/Красный.png"))
+        elif color == Qt.green:
+            self.tool_button_type_shape.setIcon(QIcon("icons/Зеленый.png"))
+        elif color == Qt.black:
+            self.tool_button_type_shape.setIcon(QIcon("icons/Черный.png"))
+        elif color == Qt.white:
+            self.tool_button_type_shape.setIcon(QIcon("icons/Черный.png"))
+
+    # endregion
+
+
 
     #region load
 
@@ -388,7 +436,7 @@ class Ui_MainWindow(object):
 
                 # Создаем объект QPainter для рисования рамки
                 painter = QPainter(pixmap_copy)
-                painter.setPen(QPen(Qt.yellow, 2))  # Устанавливаем желтую рамку толщиной 2 пикселя
+                painter.setPen(QPen(self.color_pen_shape, 2))  # Устанавливаем желтую рамку толщиной 2 пикселя
                 frame_size = 13  # Размер рамки (13 на 13 пикселей)
 
                 # Получаем координаты верхнего левого угла рамки
@@ -827,6 +875,36 @@ class Ui_MainWindow(object):
 
             self.update_img()
     #endregion
+
+    #region hist
+    def button_show_graph_clicked(self):
+        if self.image_path is not None:
+            image_path = self.image_path
+
+            if self.check_box_hist_RGB.isChecked():
+                GraphView.plot_rgb_histogram(image_path)
+
+            if self.check_box_hist_intensive.isChecked():
+                GraphView.plot_intensity_histogram(image_path)
+
+            if self.check_box_map_contrast.isChecked():
+                method = '4_neighbors' if self.radio_formula_4n.isChecked() else '8_neighbors' if self.radio_formula_8n.isChecked() else 'custom'
+                window_size = self.spin_box_n_for_formula.value() if method == 'custom' else None
+                try:
+                    GraphView.contrast_map(image_path, method, window_size)
+                except ValueError as e:
+                    QMessageBox.warning(self, "Error", str(e))
+
+            if self.check_box_profile_colomn.isChecked():
+                col_num = self.spin_box_profile_intensive_num_colomn.value()
+                GraphView.intensity_profile_column(image_path, col_num)
+
+            if self.check_box_profile_intensive_str.isChecked():
+                row_num = self.spin_box_profile_intensive_num_str.value()
+                GraphView.intensity_profile_row(image_path, row_num)
+
+    #endregion
+
 
     def show_error_message(self, title, message):
         msg = QMessageBox()
