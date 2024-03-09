@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+from scipy.signal import convolve2d
 
 class GraphView:
     @staticmethod
@@ -27,38 +28,49 @@ class GraphView:
         ax.hist(img_array.ravel(), bins=256, color='gray')
         ax.set_title('Intensity Histogram')
         ax.set_xlim(0, 255)
-        ax.set_ylim(0, 10000)  # Может потребоваться изменить диапазон в зависимости от изображения
+        ax.set_ylim(0, 1000)  # Может потребоваться изменить диапазон в зависимости от изображения
 
         plt.show()
-
 
     @staticmethod
     def contrast_map(image_path, method='4_neighbors', window_size=None):
+        try:
+            # Проверяем наличие файла изображения
+            with open(image_path, 'rb') as f:
+                pass
+        except FileNotFoundError:
+            raise FileNotFoundError("Image file not found.")
+
         img = Image.open(image_path).convert('L')
         img_array = np.array(img)
 
-        if method == '4_neighbors':
-            kernel = np.array([[0, -1, 0],
-                               [-1, 5, -1],
-                               [0, -1, 0]])
-        elif method == '8_neighbors':
-            kernel = np.array([[-1, -1, -1],
-                               [-1, 9, -1],
-                               [-1, -1, -1]])
-        elif method == 'custom':
-            if window_size is None:
-                raise ValueError("Please provide window size for custom method.")
-            kernel = np.ones((window_size, window_size)) / (window_size ** 2)
-        else:
-            raise ValueError("Unknown method.")
+        try:
+            if method == '4_neighbors':
+                kernel = np.array([[0, -1, 0],
+                                   [-1, 5, -1],
+                                   [0, -1, 0]])
+            elif method == '8_neighbors':
+                kernel = np.array([[-1, -1, -1],
+                                   [-1, 9, -1],
+                                   [-1, -1, -1]])
+            elif method == 'custom':
+                if window_size is None:
+                    raise ValueError("Please provide window size for custom method.")
+                kernel = np.ones((window_size, window_size)) / (window_size ** 2)
+            else:
+                raise ValueError("Unknown method.")
 
-        img_filtered = np.abs(np.convolve(img_array, kernel, mode='same'))
-        img_filtered = Image.fromarray(np.uint8(img_filtered))
+            img_filtered = np.abs(convolve2d(img_array, kernel, mode='same'))
+            img_filtered = Image.fromarray(np.uint8(img_filtered))
 
-        plt.imshow(img_filtered, cmap='gray')
-        plt.title('Contrast Map')
-        plt.colorbar()
-        plt.show()
+            # Вывод изображения в окно Matplotlib
+            plt.imshow(img_filtered, cmap='gray')
+            plt.title('Contrast Map')
+            plt.colorbar()
+            plt.show()
+        finally:
+            pass
+
 
 
     @staticmethod

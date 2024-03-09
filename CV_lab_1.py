@@ -472,21 +472,24 @@ class Ui_MainWindow(object):
 
                 # Вычисляем необходимые показатели
                 rgb_values = img[..., :3]  # Извлекаем только RGB значения
-                intensity = np.mean(rgb_values)  # Вычисляем интенсивность
-                average_rgb = np.mean(rgb_values, axis=(0, 1))  # Вычисляем средние значения RGB
+                rgba_values_center_pix=rgb_values[6,6]
+
+                intensity_center_pix = np.mean(rgba_values_center_pix)  # Вычисляем интенсивность пикселя центрального
                 std_deviation = np.std(rgb_values)  # Вычисляем стандартное отклонение
+
+                intensity = np.mean(rgb_values)
 
                 # Округляем значения до двух знаков после запятой
                 intensity = round(intensity, 2)
-                average_rgb = tuple(round(val, 2) for val in average_rgb)
+                intensity_center_pix = round(intensity_center_pix, 2)
                 std_deviation = round(std_deviation, 2)
 
                 # Отображаем значения в text_output_console
                 self.text_output_console.setText(
                     f"Координаты: ({cursor_position.x()}, {cursor_position.y()})\n"
-                    f"RGB: {average_rgb}\n"
-                    f"Интенсивность: {intensity}\n"
-                    f"𝜇𝑊𝑝: {np.mean(intensity)}\n"
+                    f"RGB: {rgba_values_center_pix[::-1]}\n"
+                    f"Интенсивность: {intensity_center_pix}\n"
+                    f"𝜇𝑊𝑝: {intensity}\n"
                     f"𝑠𝑊𝑝: {std_deviation}"
                 )
             else:
@@ -520,6 +523,7 @@ class Ui_MainWindow(object):
         self.button_negative_G.setText(_translate("MainWindow", "Зеленый канал"))
         self.button_negative_B.setText(_translate("MainWindow", "Синий канал"))
         self.button_negative_all.setText(_translate("MainWindow", "Яркости"))
+        self.groupBox_6.setTitle(_translate("MainWindow", "Негатив"))
         self.groupBox_7.setTitle(_translate("MainWindow", "Обмен цветовых каналов"))
         self.button_swap_R_G.setText(_translate("MainWindow", "R и G"))
         self.button_swap_R_B.setText(_translate("MainWindow", "R и B"))
@@ -604,15 +608,15 @@ class Ui_MainWindow(object):
 
             if img.mode == 'RGBA':  # Если изображение имеет альфа-канал
                 r, g, b, a = img.split()
-            else:  # Если изображение имеет только RGB каналы
+            else:
                 r, g, b = img.split()
-                a = None  # устанавливаем a в None, чтобы в дальнейшем при объединении каналов не возникало ошибок
+                a = None
 
             r_negative = Image.eval(r, lambda x: 255 - x)
-            if a:  # Если альфа-канал существует
+            if a:  # альфа-канал существует
                 img_negative = Image.merge(img.mode, (r_negative, g, b, a))
-            else:  # Если альфа-канал отсутствует
-                img_negative = Image.merge(img.mode, (r_negative,))
+            else:  # альфа-канал отсутствует
+                img_negative = Image.merge(img.mode, (r_negative, g, b))
             img_negative.save(output_path)
 
             self.update_img()
