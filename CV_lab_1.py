@@ -219,7 +219,7 @@ class Ui_MainWindow(object):
         self.spin_box_profile_intensive_num_str.setAlignment(QtCore.Qt.AlignCenter)
         self.spin_box_profile_intensive_num_str.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         self.spin_box_profile_intensive_num_str.setMinimum(1)
-        self.spin_box_profile_intensive_num_str.setMaximum(561)
+        self.spin_box_profile_intensive_num_str.setMaximum(560)
         self.spin_box_profile_intensive_num_str.setObjectName("spin_box_profile_intensive_num_str")
         self.check_box_profile_colomn = QtWidgets.QCheckBox(self.groupBox_10)
         self.check_box_profile_colomn.setGeometry(QtCore.QRect(10, 341, 191, 20))
@@ -232,7 +232,7 @@ class Ui_MainWindow(object):
         self.spin_box_profile_intensive_num_colomn.setAlignment(QtCore.Qt.AlignCenter)
         self.spin_box_profile_intensive_num_colomn.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         self.spin_box_profile_intensive_num_colomn.setMinimum(1)
-        self.spin_box_profile_intensive_num_colomn.setMaximum(661)
+        self.spin_box_profile_intensive_num_colomn.setMaximum(660)
         self.spin_box_profile_intensive_num_colomn.setObjectName("spin_box_profile_intensive_num_colomn")
         self.tool_button_type_shape = QtWidgets.QToolButton(self.centralwidget)
         self.tool_button_type_shape.setGeometry(QtCore.QRect(1180, 30, 50, 50))
@@ -489,8 +489,8 @@ class Ui_MainWindow(object):
                     f"Координаты: ({cursor_position.x()}, {cursor_position.y()})\n"
                     f"RGB: {rgba_values_center_pix[::-1]}\n"
                     f"Интенсивность: {intensity_center_pix}\n"
-                    f"𝜇𝑊𝑝: {intensity}\n"
-                    f"𝑠𝑊𝑝: {std_deviation}"
+                    f"Средняя интенсивность: {intensity}\n"
+                    f"Стандартное отклоение: {std_deviation}"
                 )
             else:
                 pass
@@ -571,7 +571,7 @@ class Ui_MainWindow(object):
 
     def extract_channel(self, image_path, channel='red'):
         img = Image.open(image_path)
-        img = img.convert('RGBA')  # Используем RGBA для поддержки прозрачности
+        img = img.convert('RGBA')
         if channel == 'red':
             r, _, _, _ = img.split()
             return r
@@ -592,7 +592,7 @@ class Ui_MainWindow(object):
         return grayscale_img
     # endregion
 
-    #region negative 50/50 BUG AFTER SWAP ERROR
+    #region negative 50/50
 
     def button_negative_R_clicked(self):
         if self.image_path is not None:
@@ -714,7 +714,7 @@ class Ui_MainWindow(object):
             output_path = self.image_path
 
             img = Image.open(input_path)
-            img_flipped = img.transpose(Image.FLIP_TOP_BOTTOM)
+            img_flipped = img.transpose(Image.FLIP_TOP_BOTTOM) #TODO собственная реализация
             img_flipped.save(output_path)
             self.update_img()
 
@@ -726,7 +726,7 @@ class Ui_MainWindow(object):
             output_path = self.image_path
 
             img = Image.open(input_path)
-            img_flipped = img.transpose(Image.FLIP_LEFT_RIGHT)
+            img_flipped = img.transpose(Image.FLIP_LEFT_RIGHT) #TODO собственная реализация
             img_flipped.save(output_path)
             self.update_img()
 
@@ -817,11 +817,11 @@ class Ui_MainWindow(object):
 
             # Применяем соответствующий фильтр размытия
             if blur_type == "mean":
-                img_blurred = img.filter(ImageFilter.BLUR)
+                img_blurred = img.filter(ImageFilter.BLUR)#TODO собственная реализация
             elif blur_type == "model_4":
-                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=1))
+                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=1))#TODO собственная реализация
             elif blur_type == "model_8":
-                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=2))
+                img_blurred = img.filter(ImageFilter.GaussianBlur(radius=2))#TODO собственная реализация
             else:
                 self.show_error_message("Ошибка", "Выберите тип размытия")
                 return
@@ -846,7 +846,7 @@ class Ui_MainWindow(object):
                         contrast_value - 1)  # применяем логарифмическую функцию для более тонкого управления контрастностью
 
             # Увеличиваем контрастность изображения и сохраняем результат
-            enhancer = ImageEnhance.Contrast(img)
+            enhancer = ImageEnhance.Contrast(img) #TODO собственная реализация
             img_contrasted = enhancer.enhance(contrast_value)
             img_contrasted.save(output_path)
 
@@ -869,10 +869,10 @@ class Ui_MainWindow(object):
             intensity_all = self.slider_intensive_all.value() / 50.0
 
             # Применяем изменения к каждому каналу и всему изображению
-            img_R = ImageEnhance.Color(img).enhance(intensity_R)
-            img_G = ImageEnhance.Color(img_R).enhance(intensity_G)
-            img_B = ImageEnhance.Color(img_G).enhance(intensity_B)
-            img_all = ImageEnhance.Color(img_B).enhance(intensity_all)
+            img_R = ImageEnhance.Color(img).enhance(intensity_R)   #TODO собственная реализация
+            img_G = ImageEnhance.Color(img_R).enhance(intensity_G)#TODO собственная реализация
+            img_B = ImageEnhance.Color(img_G).enhance(intensity_B)#TODO собственная реализация
+            img_all = ImageEnhance.Color(img_B).enhance(intensity_all)#TODO собственная реализация
 
             # Сохраняем измененное изображение
             img_all.save(output_path)

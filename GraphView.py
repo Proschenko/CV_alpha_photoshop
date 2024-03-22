@@ -12,9 +12,8 @@ class GraphView:
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         for i, color in enumerate(['red', 'green', 'blue']):
             axes[i].hist(img_array[:,:,i].ravel(), bins=256, color=color)
-            axes[i].set_title(f'{color.upper()} Histogram')
+            axes[i].set_title(f'{color.upper()} гистограмма')
             axes[i].set_xlim(0, 255)
-            axes[i].set_ylim(0, 10000)  # Может потребоваться изменить диапазон в зависимости от изображения
 
         plt.show()
 
@@ -26,9 +25,8 @@ class GraphView:
 
         fig, ax = plt.subplots(figsize=(8, 6))
         ax.hist(img_array.ravel(), bins=256, color='gray')
-        ax.set_title('Intensity Histogram')
+        ax.set_title('Гистограмма яркости')
         ax.set_xlim(0, 255)
-        ax.set_ylim(0, 1000)  # Может потребоваться изменить диапазон в зависимости от изображения
 
         plt.show()
 
@@ -60,12 +58,12 @@ class GraphView:
             else:
                 raise ValueError("Unknown method.")
 
-            img_filtered = np.abs(convolve2d(img_array, kernel, mode='same'))
+            img_filtered = np.abs(convolve2d(img_array, kernel, mode='same')) #TODO собственная реализация
             img_filtered = Image.fromarray(np.uint8(img_filtered))
 
-            # Вывод изображения в окно Matplotlib
+            plt.figure()
             plt.imshow(img_filtered, cmap='gray')
-            plt.title('Contrast Map')
+            plt.title('Карта контрастности')
             plt.colorbar()
             plt.show()
         finally:
@@ -82,9 +80,9 @@ class GraphView:
 
         plt.figure()
         plt.plot(row_data)
-        plt.title('Intensity Profile - Row {}'.format(row_number))
-        plt.xlabel('Column')
-        plt.ylabel('Intensity')
+        plt.title('Профиль яркости - Строка {}'.format(row_number))
+        plt.xlabel('Колонка')
+        plt.ylabel('Интенсивность')
         plt.show()
 
 
@@ -97,7 +95,7 @@ class GraphView:
 
         plt.figure()
         plt.plot(column_data)
-        plt.title('Intensity Profile - Column {}'.format(column_number))
-        plt.xlabel('Row')
-        plt.ylabel('Intensity')
+        plt.title('Профиль яркости - Колонка {}'.format(column_number))
+        plt.xlabel('Строка')
+        plt.ylabel('Интенсивность')
         plt.show()
