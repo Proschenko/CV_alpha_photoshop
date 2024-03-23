@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.signal import convolve2d
 
 class GraphView:
     @staticmethod
@@ -31,6 +30,24 @@ class GraphView:
         plt.show()
 
     @staticmethod
+    def convolve2d_custom(image, kernel):
+        image_height, image_width = image.shape
+        kernel_height, kernel_width = kernel.shape
+        padding_height = kernel_height // 2
+        padding_width = kernel_width // 2
+
+        padded_image = np.zeros((image_height + 2 * padding_height, image_width + 2 * padding_width))
+        padded_image[padding_height:-padding_height, padding_width:-padding_width] = image
+
+        output_image = np.zeros_like(image)
+
+        for y in range(image_height):
+            for x in range(image_width):
+                output_image[y, x] = np.sum(kernel * padded_image[y:y + kernel_height, x:x + kernel_width])
+
+        return output_image
+
+    @staticmethod
     def contrast_map(image_path, method='4_neighbors', window_size=None):
         try:
             # Проверяем наличие файла изображения
@@ -54,11 +71,12 @@ class GraphView:
             elif method == 'custom':
                 if window_size is None:
                     raise ValueError("Please provide window size for custom method.")
+                # Наша собственная реализация фильтра с усреднением
                 kernel = np.ones((window_size, window_size)) / (window_size ** 2)
             else:
                 raise ValueError("Unknown method.")
 
-            img_filtered = np.abs(convolve2d(img_array, kernel, mode='same')) #TODO собственная реализация
+            img_filtered = np.abs(GraphView.convolve2d_custom(img_array, kernel))
             img_filtered = Image.fromarray(np.uint8(img_filtered))
 
             plt.figure()
@@ -68,8 +86,6 @@ class GraphView:
             plt.show()
         finally:
             pass
-
-
 
     @staticmethod
     def intensity_profile_row(image_path, row_number):
