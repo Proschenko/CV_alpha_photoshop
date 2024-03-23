@@ -25,6 +25,7 @@ class Ui_MainWindow(object):
                       [0.168, 0.686, 0.349]])
         ]
         self.current_sepia_index = 0
+        self.flag_LA_picture = False
     def setupUi(self, MainWindow):
         #region base
         MainWindow.setObjectName("MainWindow")
@@ -497,6 +498,7 @@ class Ui_MainWindow(object):
 
 
     def apply_brightness_contrast(self, image_path, brightness_R, brightness_G, brightness_B, brightness_all, contrast):
+
         # Загрузить изображение из файла
         image = QImage(image_path)
 
@@ -508,7 +510,7 @@ class Ui_MainWindow(object):
         img_np = np.frombuffer(img_data, dtype=np.uint8).reshape((height, width, 4))
 
         # Применить настройки яркости и контрастности
-        #img_np = self.apply_brightness(img_np, brightness_R, brightness_G, brightness_B, brightness_all)
+        img_np = self.apply_brightness(img_np, brightness_R, brightness_G, brightness_B, brightness_all)
         img_np = self.apply_contrast(img_np, contrast)
 
         # Преобразовать массив NumPy обратно в изображение PIL
@@ -1020,6 +1022,28 @@ class Ui_MainWindow(object):
 
 
     #region hist
+
+    def pixmap_to_numpy(self, pixmap):
+        # Получаем размеры изображения
+        width = pixmap.width()
+        height = pixmap.height()
+
+        # Преобразуем QPixmap в QImage
+        image = pixmap.toImage()
+
+        # Создаем массив NumPy
+        img_array = np.zeros((height, width, 4), dtype=np.uint8)
+
+        # Заполняем массив данными из QImage
+        for y in range(height):
+            for x in range(width):
+                color = image.pixelColor(x, y)
+                img_array[y, x, 0] = color.red()
+                img_array[y, x, 1] = color.green()
+                img_array[y, x, 2] = color.blue()
+                img_array[y, x, 3] = color.alpha()
+
+        return img_array
     def button_show_graph_clicked(self):
         if self.image_path is not None:
             image_path = self.image_path

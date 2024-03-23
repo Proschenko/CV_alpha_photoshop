@@ -49,12 +49,7 @@ class GraphView:
 
     @staticmethod
     def contrast_map(image_path, method='4_neighbors', window_size=None):
-        try:
-            # Проверяем наличие файла изображения
-            with open(image_path, 'rb') as f:
-                pass
-        except FileNotFoundError:
-            raise FileNotFoundError("Image file not found.")
+
 
         img = Image.open(image_path).convert('L')
         img_array = np.array(img)
