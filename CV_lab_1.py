@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QImage, qRgb, QColor, QIcon
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QLabel, QFileDialog, QApplication, QMessageBox, QMenu, \
     QToolButton, QAction
 from PyQt5 import QtCore, QtWidgets
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image
 from GraphView import GraphView
 
 from PreprocessingIMG import Preprocessing_IMG
@@ -26,6 +26,7 @@ class Ui_MainWindow(object):
         ]
         self.current_sepia_index = 0
         self.flag_LA_picture = False
+        self.image_path_for_hist= None
     def setupUi(self, MainWindow):
         #region base
         MainWindow.setObjectName("MainWindow")
@@ -1047,6 +1048,7 @@ class Ui_MainWindow(object):
     def button_show_graph_clicked(self):
         if self.image_path is not None:
             image_path = self.image_path
+
 
             if self.check_box_hist_RGB.isChecked():
                 GraphView.plot_rgb_histogram(image_path)
